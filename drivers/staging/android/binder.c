@@ -1457,8 +1457,9 @@ static int binder_update_page_range(struct binder_proc *proc, int allocate,
 	if (mm) {
 		down_write(&mm->mmap_sem);
 		vma = proc->vma;
-		if (vma && mm != proc->vma_vm_mm) {
-			pr_err("%d: vma mm and task mm mismatch\n", proc->pid);
+		if (vma && mm != vma->vm_mm) {
+			pr_err("binder: %d: vma mm and task mm mismatch\n",
+				proc->pid);
 			vma = NULL;
 		}
 	}
@@ -4281,7 +4282,7 @@ static int binder_mmap(struct file *filp, struct vm_area_struct *vma)
 		goto err_get_vm_area_failed;
 	}
 	proc->buffer = area->addr;
-	proc->user_buffer_offset = vma->vm_start - (uintptr_t) proc->buffer;
+	proc->user_buffer_offset = vma->vm_start - (uintptr_t)proc->buffer;
 	mutex_unlock(&binder_mmap_lock);
 
 #ifdef CONFIG_CPU_CACHE_VIPT
@@ -4319,7 +4320,7 @@ static int binder_mmap(struct file *filp, struct vm_area_struct *vma)
 	binder_insert_free_buffer(proc, buffer);
 	proc->free_async_space = proc->buffer_size / 2;
 	barrier();
-	proc->files = get_files_struct(current);
+	proc->files = get_files_struct(proc->tsk);
 	proc->vma = vma;
 	proc->vma_vm_mm = vma->vm_mm;
 
