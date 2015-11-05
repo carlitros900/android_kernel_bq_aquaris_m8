@@ -2676,6 +2676,28 @@ static int packet_do_bind(struct sock *sk, const char *name, int ifindex,
 		}
 	}
 
+
+	if (po->fanout)
+		return -EINVAL;
+
+	lock_sock(sk);
+	spin_lock(&po->bind_lock);
+	rcu_read_lock();
+
+	if (name) {
+		dev = dev_get_by_name_rcu(sock_net(sk), name);
+		if (!dev) {
+			ret = -ENODEV;
+			goto out_unlock;
+		}
+	} else if (ifindex) {
+		dev = dev_get_by_index_rcu(sock_net(sk), ifindex);
+		if (!dev) {
+			ret = -ENODEV;
+			goto out_unlock;
+		}
+	}
+
 	if (dev)
 		dev_hold(dev);
 
