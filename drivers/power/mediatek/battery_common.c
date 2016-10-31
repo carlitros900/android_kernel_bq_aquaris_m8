@@ -4665,12 +4665,27 @@ static void battery_timer_resume(void)
 		battery_log(BAT_LOG_CRTI, "battery resume NOT by pcm timer!!\n");
 	}
 
-	if (g_call_state == CALL_ACTIVE &&
-		(bat_time_after_sleep.tv_sec - g_bat_time_before_sleep.tv_sec >= batt_cust_data.talking_sync_time)) {
-		/* phone call last than x min */
-		BMT_status.UI_SOC = battery_meter_get_battery_percentage();
-		battery_log(BAT_LOG_CRTI, "Sync UI SOC to SOC immediately\n");
-	}
+    #if defined(SOC_BY_EXT_HW_FG) && defined(CONFIG_MALATA_HARDWARE_VERSION)
+	    if(4 == hardware_version){
+           BMT_status.UI_SOC = battery_meter_get_battery_percentage();
+		   printk("---if defined bq27520,Sync UI_SOC immediately when battery_resume,BMT_status.UI_SOC=%d---\n",BMT_status.UI_SOC);
+	    }
+		else{
+			   if (g_call_state == CALL_ACTIVE &&
+		       (bat_time_after_sleep.tv_sec - g_bat_time_before_sleep.tv_sec >= batt_cust_data.talking_sync_time)) {
+		         /* phone call last than x min */
+		         BMT_status.UI_SOC = battery_meter_get_battery_percentage();
+		         battery_log(BAT_LOG_CRTI, "Sync UI SOC to SOC immediately\n");
+	           }
+		}
+	#else
+	    if (g_call_state == CALL_ACTIVE &&
+		   (bat_time_after_sleep.tv_sec - g_bat_time_before_sleep.tv_sec >= batt_cust_data.talking_sync_time)) {
+		   /* phone call last than x min */
+		   BMT_status.UI_SOC = battery_meter_get_battery_percentage();
+		   battery_log(BAT_LOG_CRTI, "Sync UI SOC to SOC immediately\n");
+	    }
+	#endif
 
 	mutex_lock(&bat_mutex);
 
