@@ -1432,6 +1432,11 @@ static long vcodec_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned 
 				     ret);
 				return -EFAULT;
 			}
+			if (rTempCoreLoading.CPUid > num_possible_cpus()) {
+				MODULE_MFV_LOGE("[ERROR] rTempCoreLoading.CPUid(%d) > num_possible_cpus(%d)\n",
+				rTempCoreLoading.CPUid, num_possible_cpus());
+				return -EFAULT;
+			}
 			/* tempory remark, must enable after function check-in */
 			/* rTempCoreLoading.Loading = get_cpu_load(rTempCoreLoading.CPUid); */
 			ret =

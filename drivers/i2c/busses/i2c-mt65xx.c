@@ -376,6 +376,46 @@ static int mtk_i2c_set_speed(struct mtk_i2c *i2c, unsigned int parent_clk,
 	return 0;
 }
 
+#if 0
+static inline u16 i2c_readw(struct mtk_i2c *i2c, u8 offset)
+{
+    return readw(i2c->base + offset);
+}
+
+static void i2c_dump_info(struct mtk_i2c *i2c)
+{
+    dev_err(i2c->dev,
+        "I2C register:\nSLAVE_ADDR %x\nINTR_MASK %x\n",
+        (i2c_readw(i2c, OFFSET_SLAVE_ADDR)),
+        (i2c_readw(i2c, OFFSET_INTR_MASK)));
+    dev_err(i2c->dev,
+        "I2C register:\nINTR_STAT %x\nCONTROL %x\n",
+        (i2c_readw(i2c, OFFSET_INTR_STAT)),
+        (i2c_readw(i2c, OFFSET_CONTROL)));
+    dev_err(i2c->dev,
+        "I2C register:\nTRANSFER_LEN %x\nTRANSAC_LEN %x\n",
+        (i2c_readw(i2c, OFFSET_TRANSFER_LEN)),
+        (i2c_readw(i2c, OFFSET_TRANSAC_LEN)));
+    dev_err(i2c->dev,
+        "I2C register:\nDELAY_LEN %x\nTIMING %x\n",
+        (i2c_readw(i2c, OFFSET_DELAY_LEN)),
+        (i2c_readw(i2c, OFFSET_TIMING)));
+    dev_err(i2c->dev,
+        "I2C register:\nSTART %x\nFIFO_STAT %x\n",
+        (i2c_readw(i2c, OFFSET_START)),
+        (i2c_readw(i2c, OFFSET_FIFO_STAT)));
+    dev_err(i2c->dev,
+        "I2C register:\nIO_CONFIG %x\nHS %x\n",
+        (i2c_readw(i2c, OFFSET_IO_CONFIG)),
+        (i2c_readw(i2c, OFFSET_HS)));
+    dev_err(i2c->dev,
+        "I2C register:\nDEBUGSTAT %x\nEXT_CONF %x\nPATH_DIR %x\n",
+        (i2c_readw(i2c, OFFSET_DEBUGSTAT)),
+        (i2c_readw(i2c, OFFSET_EXT_CONF)),
+        (i2c_readw(i2c, OFFSET_PATH_DIR)));
+}
+#endif
+
 static int mtk_i2c_do_transfer(struct mtk_i2c *i2c, struct i2c_msg *msgs,
 			       int num, int left_num)
 {
@@ -543,6 +583,8 @@ static int mtk_i2c_do_transfer(struct mtk_i2c *i2c, struct i2c_msg *msgs,
 
 	if (ret == 0) {
 		dev_dbg(i2c->dev, "addr: %x, transfer timeout\n", msgs->addr);
+//		dev_err(i2c->dev, "addr: %x, transfer timeout\n", msgs->addr);
+//		i2c_dump_info(i2c); //add this line
 		mtk_i2c_init_hw(i2c);
 		return -ETIMEDOUT;
 	}
@@ -551,6 +593,8 @@ static int mtk_i2c_do_transfer(struct mtk_i2c *i2c, struct i2c_msg *msgs,
 
 	if (i2c->irq_stat & (I2C_HS_NACKERR | I2C_ACKERR)) {
 		dev_dbg(i2c->dev, "addr: %x, transfer ACK error\n", msgs->addr);
+//		dev_err(i2c->dev, "addr: %x, transfer ACK error\n", msgs->addr);
+//		i2c_dump_info(i2c); //add this line
 		mtk_i2c_init_hw(i2c);
 		return -ENXIO;
 	}
@@ -822,6 +866,12 @@ static int mtk_i2c_resume(struct device *dev)
 
 	return 0;
 }
+
+/*start-20161010-xmyyq-impove i2c resume level for wakeuping OS speed of tp double tap*/
+static struct dev_pm_ops mtk_i2c_pm = {
+    .resume_noirq = mtk_i2c_resume,
+};
+/*end-20161010-xmyyq-impove i2c resume level for wakeuping OS speed of tp double tap*/
 #endif
 
 static struct platform_driver mtk_i2c_driver = {
@@ -830,9 +880,14 @@ static struct platform_driver mtk_i2c_driver = {
 	.driver = {
 		.name = I2C_DRV_NAME,
 		.of_match_table = of_match_ptr(mtk_i2c_of_match),
-		.pm = &(const struct dev_pm_ops){
-			SET_SYSTEM_SLEEP_PM_OPS(NULL, mtk_i2c_resume)
-		},
+/*start-20161010-xmyyq-impove i2c resume level for wakeuping OS speed of tp double tap*/
+#ifdef CONFIG_PM_SLEEP
+//		.pm = &(const struct dev_pm_ops){
+//				SET_SYSTEM_SLEEP_PM_OPS(NULL, mtk_i2c_resume)
+//		},
+		.pm = &mtk_i2c_pm,
+#endif
+/*end-20161010-xmyyq-impove i2c resume level for wakeuping OS speed of tp double tap*/
 	},
 };
 

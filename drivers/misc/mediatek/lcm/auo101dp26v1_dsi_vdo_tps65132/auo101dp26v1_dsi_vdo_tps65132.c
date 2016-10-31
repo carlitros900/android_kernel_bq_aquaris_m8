@@ -376,6 +376,15 @@ static struct LCM_setting_table lcm_initialization_setting[] =
 	{REGFLAG_END_OF_TABLE, 0x00, {}}
 };
 
+static struct LCM_setting_table lcm_suspend_setting[] =
+{
+	//======Internal setting======
+	{0x28, 0, {0x00}},
+	{REGFLAG_DELAY, 120, {}},
+	{0x10, 0, {0x00}},
+	{REGFLAG_DELAY, 120, {}},
+	{REGFLAG_END_OF_TABLE, 0x00, {}}
+};
 
 static void push_table(struct LCM_setting_table *table, unsigned int count, unsigned char force_update)
 {
@@ -527,19 +536,24 @@ static void lcm_init_lcm(void)
 
 static void lcm_suspend(void)
 {
-	unsigned int data_array[16];
+//	unsigned int data_array[16];
 
 	printk("[Kernel/LCM] lcm_suspend() enter\n");
 
+#if 0
 	data_array[0] = 0x00280500;  //display off
 	dsi_set_cmdq(data_array, 1, 1);
 	MDELAY(5);
 	data_array[0] = 0x00100500;  //display off
 	dsi_set_cmdq(data_array, 1, 1);
 	MDELAY(5);
+#else
+	push_table(lcm_suspend_setting, sizeof(lcm_suspend_setting) / sizeof(struct LCM_setting_table), 1);
+#endif
 	lcm_reset(0);
 	lcm_suspend_power();
 	lcm_vgp_supply_disable();
+	MDELAY(100);
 }
 
 

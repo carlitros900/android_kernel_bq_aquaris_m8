@@ -3721,9 +3721,13 @@ signed int battery_meter_initial(void)
 #endif
 
 #if defined(SOC_BY_EXT_HW_FG)
+#if defined(CONFIG_MALATA_HARDWARE_VERSION)
+	 if (MATCH_BQ27520_HARDWARE_VERSION == hardware_version){
 		// 1. HW initialization
 		battery_meter_ctrl(BATTERY_METER_CMD_HW_FG_INIT, NULL);
 		bm_print(BM_LOG_CRTI, "[battery_meter_initial] SOC_BY_EXT_HW_FG done\n");
+     }
+#endif
 #endif
 
 		meter_initilized = KAL_TRUE;

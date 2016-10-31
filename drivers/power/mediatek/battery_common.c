@@ -4666,7 +4666,7 @@ static void battery_timer_resume(void)
 	}
 
     #if defined(SOC_BY_EXT_HW_FG) && defined(CONFIG_MALATA_HARDWARE_VERSION)
-	    if(4 == hardware_version){
+	    if(MATCH_BQ27520_HARDWARE_VERSION == hardware_version){
            BMT_status.UI_SOC = battery_meter_get_battery_percentage();
 		   printk("---if defined bq27520,Sync UI_SOC immediately when battery_resume,BMT_status.UI_SOC=%d---\n",BMT_status.UI_SOC);
 	    }

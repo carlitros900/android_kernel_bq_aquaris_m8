@@ -226,8 +226,8 @@ static signed int fgauge_initialization(void *data)
             else
             {
                 m++;
-                msleep(1);
-                if (m>1000)
+                msleep(10);
+                if (m>100)
                 {
                     bm_print(BM_LOG_CRTI, "[fgauge_initialization] timeout!\r\n");
                     break;
