@@ -44,8 +44,7 @@
 #include "mt-plat/sync_write.h"
 
 #include "mt_static_power.h"
-/*Remove this after thermal is ready */
-#undef CONFIG_THERMAL
+
 #ifdef CONFIG_THERMAL
 #include "mach/mt_thermal.h"
 #endif
@@ -146,13 +145,6 @@ struct mt_gpufreq_table_info {
 	unsigned int gpufreq_khz;
 	unsigned int gpufreq_volt;
 };
-
-struct mt_gpufreq_power_table_info {
-	unsigned int gpufreq_khz;
-	unsigned int gpufreq_volt;
-	unsigned int gpufreq_power;
-};
-
 
 /**************************
  * enable GPU DVFS count
@@ -274,6 +266,7 @@ static DEFINE_MUTEX(mt_gpufreq_lock);
 static DEFINE_MUTEX(mt_gpufreq_power_lock);
 
 static struct mt_gpufreq_power_table_info *mt_gpufreqs_power;
+static struct mtk_gpu_power_info *mt_gpufreqs_power_info;
 static unsigned int mt_gpufreqs_power_num;	/* run-time decided */
 
 /* Currently MMPLL rate is not flaged with noncached, use this to get 'real' rate */
@@ -289,8 +282,7 @@ static struct clk *clk_pll;
 /******************************
  * Extern Function Declaration
  *******************************/
-/*extern int mtk_gpufreq_register(struct mt_gpufreq_power_table_info *freqs, int num);
-extern u32 get_devinfo_with_index(u32 index);*/
+/*extern u32 get_devinfo_with_index(u32 index);*/
 
 
 /**************************************
@@ -589,10 +581,11 @@ static void _mt_update_gpufreqs_power_table(void)
 
 static void _mt_setup_gpufreqs_power_table(int num)
 {
-	int i, j, k, temp = 0;
+	int i, temp = 0;
 	unsigned int freq, volt;
 
 	mt_gpufreqs_power = kzalloc((num) * sizeof(struct mt_gpufreq_power_table_info), GFP_KERNEL);
+	mt_gpufreqs_power_info = kzalloc((num) * sizeof(struct mtk_gpu_power_info), GFP_KERNEL);
 	if (mt_gpufreqs_power == NULL) {
 		/*gpufreq_err("GPU power table memory allocation fail\n"); */
 		return;
@@ -610,18 +603,9 @@ static void _mt_setup_gpufreqs_power_table(int num)
 	}
 
 	/* fill-in freq and volt in power table */
-	for (i = 0, k = 0; i < mt_gpufreqs_num; i++) {	/* freq */
-		for (j = 0; j <= i; j++) {	/* volt */
-			mt_gpufreqs_power[k].gpufreq_khz = mt_gpufreqs[i].gpufreq_khz;
-			mt_gpufreqs_power[k].gpufreq_volt = mt_gpufreqs[j].gpufreq_volt;
-			k++;
-
-			if (k == num)
-				break;	/* should not happen? */
-		}
-
-		if (k == num)
-			break;	/* should not happen? */
+	for (i = 0; i < mt_gpufreqs_num; i++) {	/* freq */
+		mt_gpufreqs_power[i].gpufreq_khz = mt_gpufreqs[i].gpufreq_khz;
+		mt_gpufreqs_power[i].gpufreq_volt = mt_gpufreqs[i].gpufreq_volt;
 	}
 
 	for (i = 0; i < num; i++) {
@@ -630,6 +614,9 @@ static void _mt_setup_gpufreqs_power_table(int num)
 
 		_mt_gpufreq_power_calculation(i, freq, volt, temp);
 
+		mt_gpufreqs_power_info[i].gpufreq_khz = mt_gpufreqs_power[i].gpufreq_khz;
+		mt_gpufreqs_power_info[i].gpufreq_power = mt_gpufreqs_power[i].gpufreq_power;
+
 		gpufreq_info("mt_gpufreqs_power[%d].gpufreq_khz = %u\n", i, freq);
 		gpufreq_info("mt_gpufreqs_power[%d].gpufreq_volt = %u\n", i, volt);
 		gpufreq_info("mt_gpufreqs_power[%d].gpufreq_power = %u\n", i,
@@ -637,7 +624,7 @@ static void _mt_setup_gpufreqs_power_table(int num)
 	}
 
 #ifdef CONFIG_THERMAL
-	mtk_gpufreq_register(mt_gpufreqs_power, num);
+	mtk_gpufreq_register(mt_gpufreqs_power_info, num);
 #endif
 }
 
@@ -671,7 +658,7 @@ static int _mt_setup_gpufreqs_table(struct mt_gpufreq_table_info *freqs, int num
 	g_limited_min_id = mt_gpufreqs_num - 1;
 
 	/* setup power table */
-	mt_gpufreqs_power_num = (num + 1) * num / 2;
+	mt_gpufreqs_power_num = num;
 
 	_mt_setup_gpufreqs_power_table(mt_gpufreqs_power_num);
 

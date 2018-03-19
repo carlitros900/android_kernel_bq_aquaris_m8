@@ -41,24 +41,23 @@
 #define PMIC_WRAP_DVFS_ADR7     (PWRAP_BASE + 0x120) /**/
 #define PMIC_WRAP_DVFS_WDATA7   (PWRAP_BASE + 0x124) /**/
 #endif
-#if 0
-struct mt_gpufreq_table_info {
-	unsigned int gpufreq_khz;
-	unsigned int gpufreq_volt;
-	unsigned int gpufreq_idx;
-};
 
 struct mt_gpufreq_power_table_info {
 	unsigned int gpufreq_khz;
+	unsigned int gpufreq_volt;
 	unsigned int gpufreq_power;
 };
-#endif
 
+struct mtk_gpu_power_info {
+	unsigned int gpufreq_khz;
+	unsigned int gpufreq_power;
+};
 /*****************
  * extern function
  ******************/
 extern int mt_gpufreq_state_set(int enabled);
 /* extern void mt_gpufreq_thermal_protect(unsigned int limited_power); */
+extern int mtk_gpufreq_register(struct mtk_gpu_power_info *freqs, int num);
 extern unsigned int mt_gpufreq_get_cur_freq_index(void);
 extern unsigned int mt_gpufreq_get_cur_freq(void);
 extern unsigned int mt_gpufreq_get_cur_volt(void);
