@@ -58,7 +58,9 @@ param:
 	 1, 1, 0, 0, 0, 0, 0, 0, 0, 0x0A,
 	 0x30, 0x40, 0x06, 0x12, 40, 0x40, 0x80, 0x40, 0x40, 1,
 	 0x80, 0x60, 0x80, 0x10, 0x34, 0x40, 0x40, 1, 0x80, 0xa,
-	 0x19, 0x00, 0x20, 0, 0, 1, 2, 1, 80, 1}
+	 0x19, 0x00, 0x20, 0, 0, 1, 2, 1, 80, 1,
+	 0, 0, 0, 0, 0, 0, 0, 0, 20
+	}
 };
 
 /* initialize index (because system default is 0, need fill with 0x80) */
@@ -811,6 +813,7 @@ do { if (color_dbg_en) pr_debug("[COLOR] " fmt "\n", ##arg); } while (0)
 static ddp_module_notify g_color_cb;
 
 static DISPLAY_TDSHP_T g_TDSHP_Index;
+static DISPLAY_DC_T g_DC_Index;
 
 static unsigned int g_split_en;
 static unsigned int g_split_window_x = 0xFFFF0000;
@@ -867,6 +870,11 @@ DISPLAY_PQ_T *get_Color_index()
 DISPLAY_TDSHP_T *get_TDSHP_index(void)
 {
 	return &g_TDSHP_Index;
+}
+
+DISPLAY_DC_T *get_DC_index(void)
+{
+	return &g_DC_Index;
 }
 
 void DpEngine_COLORonInit(DISP_MODULE_ENUM module, void *__cmdq)
@@ -1243,7 +1251,7 @@ static unsigned int color_read_sw_reg(unsigned int reg_id)
 {
 	unsigned int ret = 0;
 
-	if (reg_id >= SWREG_PQDC_BLACK_EFFECT_ENABLE && reg_id <= SWREG_PQDC_DC_ENABLE) {
+	if (reg_id >= SWREG_PQDC_BLACK_EFFECT_ENABLE && reg_id <= SWREG_PQDC_BINOMIAL_TAR_RANGE) {
 		ret = (unsigned int)g_PQ_DC_Param.param[reg_id - SWREG_PQDC_BLACK_EFFECT_ENABLE];
 		return ret;
 	}
@@ -1307,7 +1315,7 @@ static unsigned int color_read_sw_reg(unsigned int reg_id)
 
 static void color_write_sw_reg(unsigned int reg_id, unsigned int value)
 {
-	if (reg_id >= SWREG_PQDC_BLACK_EFFECT_ENABLE && reg_id <= SWREG_PQDC_DC_ENABLE) {
+	if (reg_id >= SWREG_PQDC_BLACK_EFFECT_ENABLE && reg_id <= SWREG_PQDC_BINOMIAL_TAR_RANGE) {
 		g_PQ_DC_Param.param[reg_id - SWREG_PQDC_BLACK_EFFECT_ENABLE] = (int)value;
 		return;
 	}
@@ -1392,6 +1400,7 @@ static int _color_io(DISP_MODULE_ENUM module, int msg, unsigned long arg, void *
 	DISP_PQ_PARAM *pq_param;
 	DISPLAY_PQ_T *pq_index;
 	DISPLAY_TDSHP_T *tdshp_index;
+	DISPLAY_DC_T *dc_index;
 
 	COLOR_DBG("_color_io: msg %x\n", msg);
 	/* COLOR_ERR("_color_io: GET_PQPARAM %lx\n", DISP_IOCTL_GET_PQPARAM); */
@@ -1513,6 +1522,29 @@ static int _color_io(DISP_MODULE_ENUM module, int msg, unsigned long arg, void *
 		tdshp_index = get_TDSHP_index();
 		if (copy_to_user((void *)arg, tdshp_index, sizeof(DISPLAY_TDSHP_T))) {
 			COLOR_ERR("DISP_IOCTL_GET_TDSHPINDEX Copy to user failed\n");
+			return -EFAULT;
+		}
+
+		break;
+
+
+	case DISP_IOCTL_SET_DCINDEX:
+
+		COLOR_DBG("DISP_IOCTL_SET_DCINDEX!\n");
+
+		dc_index = get_DC_index();
+		if (copy_from_user(dc_index, (void *)arg, sizeof(DISPLAY_DC_T))) {
+			COLOR_ERR("DISP_IOCTL_SET_DCINDEX Copy from user failed\n");
+			return -EFAULT;
+		}
+
+		break;
+
+	case DISP_IOCTL_GET_DCINDEX:
+
+		dc_index = get_DC_index();
+		if (copy_to_user((void *)arg, dc_index, sizeof(DISPLAY_DC_T))) {
+			COLOR_ERR("DISP_IOCTL_GET_DCINDEX Copy to user failed\n");
 			return -EFAULT;
 		}
 

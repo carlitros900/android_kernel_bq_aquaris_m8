@@ -1,3 +1,16 @@
+/*
+ * Copyright (C) 2018 MediaTek Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
+ */
+
 #include <linux/kernel.h>
 #include <linux/mm.h>
 #include <linux/mm_types.h>
@@ -988,6 +1001,12 @@ static int set_memory_buffer(disp_session_input_config *input)
 
 	memset((void *)&input_params, 0, sizeof(input_params));
 
+	if (input->config_layer_num == 0 || input->config_layer_num > OVL_LAYER_NUM) {
+		DISPERR("set_memory_buffer, config_layer_num invalid = %d!\n",
+			input->config_layer_num);
+		return 0;
+	}
+
 	for (i = 0; i < input->config_layer_num; i++) {
 		dst_mva = 0;
 		layer_id = input->config[i].layer_id;
@@ -1082,6 +1101,13 @@ static int set_external_buffer(disp_session_input_config *input)
 
 	session_id = input->session_id;
 	session_info = disp_get_session_sync_info_for_debug(session_id);
+
+	if (input->config_layer_num == 0 || input->config_layer_num > OVL_LAYER_NUM) {
+		DISPERR("set_external_buffer, config_layer_num invalid = %d!\n",
+			input->config_layer_num);
+		return 0;
+	}
+
 	if (extd_hdmi_path_get_mode() == EXTD_RDMA_DPI_MODE) {
 		input->config_layer_num = 1;
 		if (ovl1_remove == 1) {
@@ -1722,6 +1748,11 @@ int _ioctl_wait_vsync(unsigned long arg)
 	if (session_info)
 		dprec_done(&session_info->event_waitvsync, 0, 0);
 
+	if (copy_to_user(argp, &vsync_config, sizeof(vsync_config))) {
+		DISPPR_ERROR("[FB]: copy_to_user failed! line:%d\n", __LINE__);
+		return -EFAULT;
+	}
+
 	return ret;
 }
 
@@ -2117,6 +2148,8 @@ const char *_session_ioctl_spy(unsigned int cmd)
 		return "DISP_IOCTL_SET_GAMMALUT";
 	case DISP_IOCTL_SET_CCORR:
 		return "DISP_IOCTL_SET_CCORR";
+	case DISP_IOCTL_GET_CCORR:
+		return "DISP_IOCTL_GET_CCORR";
 	case DISP_IOCTL_SET_PQPARAM:
 		return "DISP_IOCTL_SET_PQPARAM";
 	case DISP_IOCTL_GET_PQPARAM:
@@ -2141,6 +2174,10 @@ const char *_session_ioctl_spy(unsigned int cmd)
 		return "DISP_IOCTL_OD_CTL";
 	case DISP_IOCTL_GET_DISPLAY_CAPS:
 		return "DISP_IOCTL_GET_DISPLAY_CAPS";
+	case DISP_IOCTL_SET_DCINDEX:
+		return "DISP_IOCTL_SET_DCINDEX";
+	case DISP_IOCTL_GET_DCINDEX:
+		return "DISP_IOCTL_GET_DCINDEX";
 
 	default:
 		{
@@ -2223,6 +2260,7 @@ long mtk_disp_mgr_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	case DISP_IOCTL_AAL_SET_PARAM:
 	case DISP_IOCTL_SET_GAMMALUT:
 	case DISP_IOCTL_SET_CCORR:
+	case DISP_IOCTL_GET_CCORR:
 	case DISP_IOCTL_SET_PQPARAM:
 	case DISP_IOCTL_GET_PQPARAM:
 	case DISP_IOCTL_SET_PQINDEX:
@@ -2245,6 +2283,8 @@ long mtk_disp_mgr_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	case DISP_IOCTL_PQ_SET_DC_PARAM:
 	case DISP_IOCTL_WRITE_SW_REG:
 	case DISP_IOCTL_READ_SW_REG:
+	case DISP_IOCTL_SET_DCINDEX:
+	case DISP_IOCTL_GET_DCINDEX:
 		{
 			ret = primary_display_user_cmd(cmd, arg);
 			break;

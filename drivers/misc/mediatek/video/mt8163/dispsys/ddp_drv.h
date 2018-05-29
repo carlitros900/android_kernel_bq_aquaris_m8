@@ -67,6 +67,8 @@ typedef struct {
 #define COLOR_TUNING_INDEX 19
 #define THSHP_TUNING_INDEX 12
 #define THSHP_PARAM_MAX 83
+#define DC_TUNING_INDEX 11
+#define DC_PARAM_MAX 49
 
 
 #define GLOBAL_SAT_SIZE 10
@@ -127,6 +129,12 @@ typedef struct {
 
 } DISPLAY_TDSHP_T;
 
+typedef struct {
+
+	unsigned int entry[DC_TUNING_INDEX][DC_PARAM_MAX];
+
+} DISPLAY_DC_T;
+
 
 typedef enum {
 	BlackEffectEnable = 0,
@@ -168,12 +176,21 @@ typedef enum {
 	ProtectRegionEffect,
 	DCChangeSpeedLevel2,
 	ProtectRegionWeight,
-	DCEnable
+	DCEnable,
+	DarkSceneTh,
+	DarkSceneSlope,
+	DarkDCGain,
+	DarkACGain,
+	BinomialTh,
+	BinomialSlope,
+	BinomialDCGain,
+	BinomialACGain,
+	BinomialTarRange
 } PQ_DC_index_t;
 
 typedef struct {
 
-	int param[40];
+	int param[DC_PARAM_MAX];
 
 } DISP_PQ_DC_PARAM;
 
@@ -236,6 +253,7 @@ typedef enum {
 #define DISP_IOCTL_AAL_INIT_REG    _IOW(DISP_IOCTL_MAGIC, 18 , DISP_AAL_INITREG)
 #define DISP_IOCTL_SET_GAMMALUT    _IOW(DISP_IOCTL_MAGIC, 23 , DISP_GAMMA_LUT_T)
 #define DISP_IOCTL_SET_CCORR       _IOW(DISP_IOCTL_MAGIC, 24 , DISP_CCORR_COEF_T)
+#define DISP_IOCTL_GET_CCORR       _IOW(DISP_IOCTL_MAGIC, 25 , DISP_CCORR_COEF_T)
 
 
 /* Add for AAL control - E */
@@ -280,4 +298,8 @@ typedef enum {
 /* OVL */
 #define DISP_IOCTL_OVL_ENABLE_CASCADE  _IOW(DISP_IOCTL_MAGIC, 90 , int)
 #define DISP_IOCTL_OVL_DISABLE_CASCADE  _IOW(DISP_IOCTL_MAGIC, 91 , int)
+
+/* DC */
+#define DISP_IOCTL_SET_DCINDEX   _IOW(DISP_IOCTL_MAGIC, 100 , DISPLAY_DC_T)
+#define DISP_IOCTL_GET_DCINDEX   _IOR(DISP_IOCTL_MAGIC, 101 , DISPLAY_DC_T)
 #endif

@@ -250,6 +250,13 @@ static int disp_ccorr_write_coef_reg(cmdqRecHandle cmdq, disp_ccorr_id_t id, int
 		goto ccorr_write_coef_unlock;
 	}
 
+	/*
+	pr_debug("\nccorr_coef_set: %6d %6d %6d\n%6d %6d %6d\n %6d %6d %6d\n",
+			ccorr->coef[0][0], ccorr->coef[0][1], ccorr->coef[0][2],
+			ccorr->coef[1][0], ccorr->coef[1][1], ccorr->coef[1][2],
+			ccorr->coef[2][0], ccorr->coef[2][1], ccorr->coef[2][2]);
+	*/
+
 	DISP_REG_SET(cmdq, DISP_REG_CCORR_EN, 1);
 #if 0
 	/*
@@ -341,12 +348,53 @@ static int disp_ccorr_config(DISP_MODULE_ENUM module, disp_ddp_path_config *pCon
 }
 
 
+DISP_CCORR_COEF_T *get_ccorr_coef(int id)
+{
+	const unsigned long ccorr_base = DISPSYS_CCORR_BASE + 0x80;
+	static DISP_CCORR_COEF_T *ccorr;
+
+	spin_lock(&g_gamma_global_lock);
+
+	if (ccorr == NULL)
+		ccorr = kmalloc(sizeof(DISP_CCORR_COEF_T), GFP_KERNEL);
+
+	ccorr->coef[0][0] = (DISP_REG_GET(CCORR_REG(ccorr_base, 0)) >> 16) & 0xfff;
+	ccorr->coef[0][1] = (DISP_REG_GET(CCORR_REG(ccorr_base, 0)) >> 0) & 0xfff;
+	ccorr->coef[0][2] = (DISP_REG_GET(CCORR_REG(ccorr_base, 1)) >> 16) & 0xfff;
+	ccorr->coef[1][0] = (DISP_REG_GET(CCORR_REG(ccorr_base, 1)) >> 0) & 0xfff;
+	ccorr->coef[1][1] = (DISP_REG_GET(CCORR_REG(ccorr_base, 2)) >> 16) & 0xfff;
+	ccorr->coef[1][2] = (DISP_REG_GET(CCORR_REG(ccorr_base, 2)) >> 0) & 0xfff;
+	ccorr->coef[2][0] = (DISP_REG_GET(CCORR_REG(ccorr_base, 3)) >> 16) & 0xfff;
+	ccorr->coef[2][1] = (DISP_REG_GET(CCORR_REG(ccorr_base, 3)) >> 0) & 0xfff;
+	ccorr->coef[2][2] = (DISP_REG_GET(CCORR_REG(ccorr_base, 4)) >> 16) & 0xfff;
+
+	spin_unlock(&g_gamma_global_lock);
+
+	/*
+	pr_err("\nccorr_coef_get: %6d %6d %6d\n%6d %6d %6d\n %6d %6d %6d\n",
+			ccorr->coef[0][0], ccorr->coef[0][1], ccorr->coef[0][2],
+			ccorr->coef[1][0], ccorr->coef[1][1], ccorr->coef[1][2],
+			ccorr->coef[2][0], ccorr->coef[2][1], ccorr->coef[2][2]);
+	*/
+	return ccorr;
+}
+
 static int disp_ccorr_io(DISP_MODULE_ENUM module, int msg, unsigned long arg, void *cmdq)
 {
 	switch (msg) {
 	case DISP_IOCTL_SET_CCORR:
 		if (disp_ccorr_set_coef((DISP_CCORR_COEF_T *) arg, cmdq) < 0) {
 			pr_err("DISP_IOCTL_SET_CCORR: failed\n");
+			return -EFAULT;
+		}
+		break;
+	case DISP_IOCTL_GET_CCORR:
+		if (get_ccorr_coef(DISP_CCORR0) == NULL) {
+			pr_err("DISP_IOCTL_GET_PQPARAM Get ccorr coef failed\n");
+			return -EFAULT;
+		}
+		if (copy_to_user((void *)arg, get_ccorr_coef(DISP_CCORR0), sizeof(DISP_CCORR_COEF_T))) {
+			pr_err("DISP_IOCTL_GET_PQPARAM Copy to user failed\n");
 			return -EFAULT;
 		}
 		break;

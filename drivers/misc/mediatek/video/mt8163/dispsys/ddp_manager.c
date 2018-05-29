@@ -1496,6 +1496,7 @@ int dpmgr_path_user_cmd(disp_path_handle dp_handle, int msg, unsigned long arg, 
 		}
 		break;
 	case DISP_IOCTL_SET_CCORR:
+	case DISP_IOCTL_GET_CCORR:
 		if (ddp_modules_driver[DISP_MODULE_CCORR]->cmd != NULL) {
 			ret =
 			    ddp_modules_driver[DISP_MODULE_CCORR]->cmd(DISP_MODULE_CCORR, msg, arg,
@@ -1524,6 +1525,8 @@ int dpmgr_path_user_cmd(disp_path_handle dp_handle, int msg, unsigned long arg, 
 	case DISP_IOCTL_PQ_SET_DC_PARAM:
 	case DISP_IOCTL_WRITE_SW_REG:
 	case DISP_IOCTL_READ_SW_REG:
+	case DISP_IOCTL_SET_DCINDEX:
+	case DISP_IOCTL_GET_DCINDEX:
 		{
 			if (is_module_in_path(DISP_MODULE_COLOR0, handle))
 				dst = DISP_MODULE_COLOR0;
