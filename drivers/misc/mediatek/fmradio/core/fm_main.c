@@ -1,3 +1,16 @@
+/*
+ * Copyright (C) 2015 MediaTek Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ */
+
 #include <linux/kernel.h>
 #include <asm/uaccess.h>
 #include <linux/slab.h>
@@ -150,7 +163,7 @@ fm_s32 fm_set_stat(struct fm *fmp, int which, bool stat)
 	if (FM_LOCK(fm_ops_lock))
 		return -FM_ELOCK;
 
-	if (which < (sizeof(g_fm_stat) / sizeof(g_fm_stat[0]))) {
+	if (which >= 0 && which < (sizeof(g_fm_stat) / sizeof(g_fm_stat[0]))) {
 		g_fm_stat[which] = stat;
 		WCN_DBG(FM_DBG | MAIN, "fm set stat object=%d, stat=%d\n", which, stat);
 	} else {
@@ -177,7 +190,7 @@ fm_s32 fm_get_stat(struct fm *fmp, int which, bool *stat)
 	if (FM_LOCK(fm_ops_lock))
 		return -FM_ELOCK;
 
-	if (which < (sizeof(g_fm_stat) / sizeof(g_fm_stat[0]))) {
+	if (which >= 0 && which < (sizeof(g_fm_stat) / sizeof(g_fm_stat[0]))) {
 		*stat = g_fm_stat[which];
 		WCN_DBG(FM_DBG | MAIN, "fm get stat object=%d, stat=%d\n", which, *stat);
 	} else {
