@@ -1,3 +1,5 @@
+ccflags-y := -Wno-logical-not-parentheses
+
 ccflags-$(CONFIG_MTK_ION)  += -I$(srctree)/drivers/staging/android/ion
 
 obj-$(CONFIG_ION) +=	ion.o ion_heap.o ion_page_pool.o ion_system_heap.o \

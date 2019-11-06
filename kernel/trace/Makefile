@@ -1,3 +1,4 @@
+ccflags-y := -Wno-misleading-indentation
 
 # Do not instrument the tracer itself:
 

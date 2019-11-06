@@ -1,5 +1,7 @@
 #include $(srctree)/drivers/misc/mediatek/Makefile.custom
 
+ccflags-y := -Wno-misleading-indentation
+
 obj-$(CONFIG_MTK_PMIC)          += pmic_mt6323.o pmic_chr_type_det.o
 
 obj-$(CONFIG_MTK_SMART_BATTERY) += battery_meter_hal.o
