@@ -327,4 +327,3 @@ TRACE_EVENT(binder_return,
 #define TRACE_INCLUDE_PATH .
 #define TRACE_INCLUDE_FILE binder_trace
 #include <trace/define_trace.h>
-
